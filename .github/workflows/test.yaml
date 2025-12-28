@@ -1,0 +1,61 @@
+name: Test
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronize
+    branches:
+      - main
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      HUGO_CACHEDIR: /tmp/hugo_cache
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6.0.1
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v3.0.0
+        with:
+          hugo-version: '0.153.3'
+          extended: true
+
+      - name: Cache Hugo modules
+        uses: actions/cache@v5.0.1
+        with:
+          path: ${{ env.HUGO_CACHEDIR }}
+          key: ${{ runner.os }}-hugomod-${{ hashFiles('**/go.sum') }}
+          restore-keys: |
+            ${{ runner.os }}-hugomod-
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6.1.0
+        with:
+          node-version: '24'
+
+      - name: Install markdownlint-cli
+        run: npm install -g markdownlint-cli
+
+      - name: Get changed markdown files
+        id: changed-files
+        uses: tj-actions/changed-files@v47.0.1
+        with:
+          files: |
+            content/**/*.md
+
+      - name: Lint changed markdown files
+        if: steps.changed-files.outputs.any_changed == 'true'
+        run: |
+          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
+          markdownlint ${{ steps.changed-files.outputs.all_changed_files }} --config .markdownlint.json
+        continue-on-error: true
+
+      - name: Build
+        run: hugo --minify
