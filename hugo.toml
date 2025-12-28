@@ -1,0 +1,19 @@
+baseURL = "https://suyashsrijan.com/blog/"
+languageCode = "en-gb"
+title = "Suyash's blog"
+theme = "archie"
+copyright = "© Suyash Srijan"
+
+pygmentsstyle = "monokai"
+pygmentscodefences = true
+pygmentscodefencesguesssyntax = true
+
+[params]
+  mode = "toggle"
+  useCDN = false
+  subtitle = ""
+
+[markup]
+  [markup.goldmark]
+    [markup.goldmark.extensions]
+      footnote = true
