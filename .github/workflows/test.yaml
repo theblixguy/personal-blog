@@ -52,10 +52,9 @@ jobs:
 
       - name: Lint changed markdown files
         if: steps.changed-files.outputs.any_changed == 'true'
-        run: |
-          echo "Changed files: ${{ steps.changed-files.outputs.all_changed_files }}"
-          markdownlint ${{ steps.changed-files.outputs.all_changed_files }} --config .markdownlint.json
-        continue-on-error: true
+        uses: DavidAnson/markdownlint-cli2-action@v22
+        with:
+          globs: ${{ steps.changed-files.outputs.all_changed_files }}
 
       - name: Build
         run: hugo --minify
