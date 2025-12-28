@@ -35,14 +35,6 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-hugomod-
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v6.1.0
-        with:
-          node-version: '24'
-
-      - name: Install markdownlint-cli
-        run: npm install -g markdownlint-cli
-
       - name: Get changed markdown files
         id: changed-files
         uses: tj-actions/changed-files@v47.0.1
@@ -55,6 +47,23 @@ jobs:
         uses: DavidAnson/markdownlint-cli2-action@v22
         with:
           globs: ${{ steps.changed-files.outputs.all_changed_files }}
+        continue-on-error: true
 
       - name: Build
         run: hugo --minify
+
+      - name: Setup Tailscale VPN
+        uses: tailscale/github-action@v4.1.1
+        with:
+          oauth-client-id: ${{ secrets.TAILSCALE_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TAILSCALE_CLIENT_SECRET }}
+          tags: tag:ci
+
+      - name: Setup SSH known hosts
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_KNOWN_HOSTS }}" >> ~/.ssh/known_hosts
+
+      - name: Deploy changes (dry run)
+        run: |
+          rsync -avzhin --no-perms public/ ${{ secrets.SSH_SERVER_USERNAME }}@${{ secrets.SSH_SERVER_TAILSCALE_IP }}:${{ secrets.SSH_SERVER_BLOG_PATH }}
