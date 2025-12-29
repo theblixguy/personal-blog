@@ -66,4 +66,4 @@ jobs:
 
       - name: Deploy changes (dry run)
         run: |
-          rsync -avzhin --no-perms public/ ${{ secrets.SSH_SERVER_USERNAME }}@${{ secrets.SSH_SERVER_TAILSCALE_IP }}:${{ secrets.SSH_SERVER_BLOG_PATH }}
+          rsync -avzhin --no-perms --delete public/ ${{ secrets.SSH_SERVER_USERNAME }}@${{ secrets.SSH_SERVER_TAILSCALE_IP }}:${{ secrets.SSH_SERVER_BLOG_PATH }}

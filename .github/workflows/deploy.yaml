@@ -48,4 +48,4 @@ jobs:
 
       - name: Deploy to server
         run: |
-          rsync -azh --no-perms public/ ${{ secrets.SSH_SERVER_USERNAME }}@${{ secrets.SSH_SERVER_TAILSCALE_IP }}:${{ secrets.SSH_SERVER_BLOG_PATH }}
+          rsync -azh --no-perms --delete public/ ${{ secrets.SSH_SERVER_USERNAME }}@${{ secrets.SSH_SERVER_TAILSCALE_IP }}:${{ secrets.SSH_SERVER_BLOG_PATH }}
