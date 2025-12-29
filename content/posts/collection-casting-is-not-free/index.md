@@ -6,13 +6,14 @@ tags: ["swift", "ios", "engineering"]
 draft: false
 ---
 
-![](header.jpeg)
+![Colourful shipping containers stacked in a grid pattern at a cargo port](header.jpeg)
 
 Type casting is a really easy and convenient way to check the type of an instance or to convert its type to another type.
 
 One of the operations we sometimes perform when dealing with collections is to convert it into a collection of something else. We accomplish this by using the `map` function.
 
 For example:
+
 ```swift
 struct User {
   let name: String
@@ -29,6 +30,7 @@ let personArray = userArray.map { Person(name: $0.name) }
 However, sometimes there is a relationship between the types and therefore we can skip the `map` and use a cast (`as` / `as?` / `as!`) instead.
 
 For example:
+
 ```swift
 protocol Boxable {}
 
@@ -51,6 +53,7 @@ The size of an array's buffer is *at least* `MemoryLayout<T>.stride * N` where `
 (and if you're wondering why `stride` is used, instead of `size`, here's a hint: alignment)
 
 In our earlier example, we initially had an array of `IntBox` with three elements in it. Thus, the size of the buffer was 24 bytes.
+
 ```swift
 protocol Boxable {}
 
@@ -62,6 +65,7 @@ print(MemoryLayout<IntBox>.stride * 3) // 24 bytes
 ```
 
 But, when we upcasted it to an array of `Boxable`, something different happened. Yes, we went from an array of `IntBox` to an array of `Boxable`. But also, we went through a change in memory representation.
+
 ```swift
 protocol Boxable {}
 
@@ -79,6 +83,7 @@ This means we can't just simply copy the buffer and convert each element from on
 Well, by creating a brand new array of course! Yes, what's really going on is the runtime is effectively creating a brand new array and "mapping" each element from one type to the other. So, whenever you're casting a collection, what you're really doing (or rather, what the runtime is doing) is effectively a `map`. Yes, **very subtle**.
 
 It's even *more* subtle when the explicit casting is not required:
+
 ```swift
 protocol Boxable {}
 
@@ -100,7 +105,7 @@ Here's a very simple benchmark that demonstrates the cost of casting a collectio
 
 As you can see, a cast has pretty much the same performance impact as a map.
 
-Now, you might be wondering, what if the size of the existing buffer is much larger? Well, **it doesn't matter**. Whether you're upcasting or downcasting (regardless of the size of the existing buffer), either of those operations would result in a runtime call to either forcefully or conditionally perform the cast and you will have to pay the price, because both operations [effectively] [result](https://github.com/apple/swift/blob/master/stdlib/public/core/ArrayCast.swift) in a map.
+Now, you might be wondering, what if the size of the existing buffer is much larger? Well, **it doesn't matter**. Whether you're upcasting or downcasting (regardless of the size of the existing buffer), either of those operations would result in a runtime call to either forcefully or conditionally perform the cast and you will have to pay the price, because both operations effectively [result](https://github.com/apple/swift/blob/master/stdlib/public/core/ArrayCast.swift) in a map.
 
 Okay, so **why is this important to know**? Well, most people don't actually realise that casting a collection can change the performance characteristics of the code. There is an expectation that this kind of covariance would JustWork™ (without any gotchas), however that's not really the case because it's not a free conversion.
 

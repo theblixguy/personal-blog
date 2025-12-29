@@ -4,16 +4,24 @@ title = "Suyash's blog"
 theme = "archie"
 copyright = "© Suyash Srijan"
 
-pygmentsstyle = "monokai"
-pygmentscodefences = true
-pygmentscodefencesguesssyntax = true
-
 [params]
   mode = "toggle"
   useCDN = false
-  subtitle = ""
+  subtitle = "Thoughts on code and other curiosities"
 
 [markup]
   [markup.goldmark]
     [markup.goldmark.extensions]
       footnote = true
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['\[', '\]'], ['$$', '$$']]
+          inline = [['\(', '\)']]
+    [markup.goldmark.parser]
+      [markup.goldmark.parser.attribute]
+        block = true
+  [markup.highlight]
+    codeFences = true
+    guessSyntax = true
+    style = 'base16-snazzy'
