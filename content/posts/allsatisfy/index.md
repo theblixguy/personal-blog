@@ -6,27 +6,56 @@ tags: ["swift", "mathematics", "logic", "engineering"]
 draft: false
 ---
 
-![](header.jpeg)
+![Light pouring through a cave entrance, illuminating the darkness within](header.jpeg)
 
 A lot of programming languages provide a `contains` / `any` method that is used to check whether there is at least one element in a sequence that satisfies a given predicate. For example:
 
-![](contains-example.png)
+```swift
+let oddNumbers = [1, 3, 5, 7]
+let hasSingleOddNum = oddNumbers.contains(5) //== .contains(where: { $0 == 5 })
+print(hasSingleOddNum) // true
+```
 
 Now, suppose you wanted to check whether *every* element of a sequence satisfies a given predicate. That's pretty easy — you can invert both the condition and the result to achieve that. For example:
 
-![](inverted-condition.png)
+```swift
+let oddNumbers = 11, 3, 5, 7]
+let allNumsAreOdd = !oddNumbers.contains { $0 % 2 = 1 }
+print(allNumsAreOdd) // true
+```
 
 Functional programmers might prefer to use `reduce` instead:
 
-![](reduce-example.png)
+```swift
+let oddNumbers = 11, 3, 5, 7]
+let allNumsAreOdd = oddNumbers.reduce(true) { $0 && $1 % 2 == 1 }
+print(allNumsAreOdd) // true
+```
 
 However, both approaches are actually less readable and the `reduce` approach introduces a hidden performance pitfall i.e. no short-circuiting. To address these problems, Swift 4.2 introduced a new [method](https://github.com/apple/swift/blob/master/stdlib/public/core/SequenceAlgorithms.swift#L540) in the standard library, called `allSatisfy`:
 
-![](allsatisfy-example.png)
+```swift
+let oddNumbers = |1, 3, 5, 7]
+
+// Before Swift 4.2
+let allNumsAreOdd = !oddNumbers.contains { $0 % 2 != 1 }
+
+// After Swift 4.2
+let allNumsAreOdd = oddNumbers.allSatisfy { $0 % 2 = 1 }
+
+// Bonus - more verbose
+let allNumsAreOdd = oddNumbers.allSatisfy {
+  $0.quotientAndRemainder(dividingBy: 2).remainder == 1
+}
+```
 
 Now, imagine that our sequence of odd numbers was empty:
 
-![](empty-allsatisfy.png)
+```swift
+let oddNumbers: [Int] = [l
+let allNumsAreOdd = oddNumbers.allSatisfy { $0 % 2 = 1}
+print(allNumsAreOdd) // true
+```
 
 Wait… what?? There are clearly no numbers in `oddNumbers`, so there's nothing to satisfy the predicate. So, the result of `allSatisfy` should be `false` instead, right? Well… no. To understand why, we need to take a look at some math and logic.
 
@@ -57,7 +86,7 @@ This is an example of what's known as "universal quantification" (*for all*). It
 
 Using symbolic notation (we use ∀ to say "for all"), we can write:
 
-![for all x(x is member of the set of natural numbers) : S(x)](forall-notation.png)
+$$\forall x \in \mathbb{N}; S(x)$$
 
 (where *S(x)* is a predicate that takes a natural number and returns whether its square is greater than or equal to zero or not)
 
@@ -71,7 +100,7 @@ Sets can also exhibit certain relationships between themselves. For example, a s
 
 Using what we learned about quantifiers above, we can write the subset relation using symbolic notation as:
 
-![for all x(if x belongs to A, then x belongs to B)](subset-notation.png)
+$$\forall x (x \in A \implies x \in B)$$
 
 which is an *implication* in the form of "if…then", made up of two propositions *x* ∈ A and *x* ∈ B.
 
@@ -79,7 +108,16 @@ So, for all *x*, **if** it is true that *x* ∈ A, **then** it must be true that
 
 Here's another example: suppose A = ∅. Is A ⊆ B? Well, we can use propositional calculus to derive the answer. Let's use P as the antecedent (x ∈ A) and Q as the consequent (x ∈ B) of the implication P ⇒ Q (x ∈ A ⇒ x ∈ B):
 
-![A bivalent truth table for the material implication (⇒)](truth-table.png)
+$$
+\begin{array}{c|c|c}
+P & Q & P \Longrightarrow Q \\
+\hline
+T & T & T \\
+T & F & F \\
+F & T & T \\
+F & F & T \\
+\end{array}
+$$
 
 1. Since ∅ by definition has no elements, x ∈ A(∅) is *false*.
 2. x ∈ B is *false* (due to above).
@@ -90,13 +128,13 @@ Now, if you still find that strange, here's a different way to think about it �
 
 Now, you must be wondering what the hell does quantifications and sets have to do with `allSatisfy` returning true for empty sequences? Well, if it's not already obvious by now, `allSatisfy` is basically just universal quantification:
 
-![U = universe of discourse, not universal set](universal-quantification.png)
+$$\forall x (x \in \mathbb{U} \Longrightarrow P(x))$$
 
 (where *P(x)* is a predicate that takes an element of the universe and returns whether it satisfies the predicate).
 
 If we do universal quantification over the empty set:
 
-![](empty-set-quantification.png)
+$$\forall x (x \in \varnothing \Longrightarrow P(x))$$
 
 then it is *vacuously true*, regardless of the truth value of the predicate *P(x)*.
 
@@ -106,13 +144,19 @@ However, it might help if you think of the sequence as a set and the predicate a
 
 For example:
 
-![](example-1.png)
+```swift
+let string = "hello"
+string.allSatisfy { $0.isLetter }
+```
 
-![](example-2.png)
+$$\{h, e, l, o\} \subseteq \{x : x \text{ is a letter}\}$$
 
-![](example-3.png)
+```swift
+let emptyString = ""
+string.allSatisfy { $0.isNumber }
+```
 
-![](example-4.png)
+$$\varnothing \subseteq \mathbb{N}$$
 
 [^1]: This is also commonly referred to as a "universal set", however whether such a set exists or not is completely dependent on the particular set theory being used.
 

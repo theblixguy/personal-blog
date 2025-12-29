@@ -6,13 +6,43 @@ tags: ["swift", "ios", "property-wrappers", "engineering"]
 draft: false
 ---
 
-![](header.jpeg)
+![Wooden boardwalk to a beach blocked by a barrier with a "Beach Closed" sign dated March 20, 2020](header.jpeg)
 
 In Swift 5.5, property wrappers can now be placed on [function and closure parameters](https://github.com/apple/swift-evolution/blob/main/proposals/0293-extend-property-wrappers-to-function-and-closure-parameters.md). This has allowed me to write something that I and many people have always wanted in Swift — a way to somehow enforce that a closure is called exactly once.
 
 To understand why, here's a simple example:
 
-![](completion-handler-example.png)
+```swift
+func fetchSpecialUser(completion: @escaping (Result<User, Error>) -> Void) {
+  fetchUserImpl { user in
+    guard let user = user else {
+      // oops, forgot to call completion(...) here!
+      return
+    }
+
+    guard user.isPendingEmailVerification == false else {
+      completion(.failure(.userNotVerified))
+      return
+    }
+
+    if user.hasSubscription {
+      switch getSubscriptionType(user) {
+        case .ultimate, .premium:
+          completion(.success(user))
+        case .standard:
+          completion(.failure(.noPaidSubscription))
+      }
+    }
+
+    // ... more business logic here
+
+    // oops, forgot a 'return' in the if-statement above,
+    // so execution continues and closure is called twice
+    // (and with an invalid result!).
+    completion(.failure(.generic))
+  }
+}
+```
 
 It's very common to write code where you have a function with a completion handler which must be called with a success or failure value based on the underlying result of the work that the function does.
 
@@ -24,11 +54,71 @@ Though, wouldn't it be nice if your code can just shout at you "Hey! You forgot 
 
 Here's a naive implementation:
 
-![](once-implementation.png)
+```swift
+@propertyWrapper
+public final class Once<T, U> {
+  private enum ClosureState {
+    case queued((T) -> U)
+    case executed
+  }
+
+  private var state: ClosureState
+  public var wrappedValue: (T) -> U {
+    switch state {
+      case let .queued(closure):
+        state = .executed
+        return closure
+      case .executed:
+        fatalError("Closure has already been invoked once!")
+    }
+  }
+
+  public init(wrappedValue: @escaping (T) -> U) {
+    self.state = .queued(wrappedValue)
+  }
+
+  deinit {
+    switch state {
+      case .queued:
+        fatalError("Expected closure to have already been executed once!")
+      case .executed:
+        break
+    }
+  }
+}
+```
 
 You can annotate your function parameter with this property wrapper:
 
-![](once-usage.png)
+```swift
+func fetchSpecialUser(@Once completion: @escaping (Result<User, Error>) -> Void) {
+  fetchUserImpl { user in
+    guard let user = user else {
+      // runtime error: expected closure to have already been executed once!
+      return
+    }
+
+    guard user.isPendingEmailVerification == false else {
+      completion(.failure(.userNotVerified))
+      return
+    }
+
+    if user.hasSubscription {
+      switch getSubscriptionType(user) {
+        case .ultimate, .premium:
+          completion(.success(user))
+        case .standard:
+          completion(.failure(.noPaidSubscription))
+      }
+    }
+
+    // ... more business logic here
+
+    // runtime error: closure has already been invoked!
+    completion(.failure(.generic))
+  }
+}
+```
 
 And now you will get an error on runtime if the closure was not called exactly once in the body! ✨
 
