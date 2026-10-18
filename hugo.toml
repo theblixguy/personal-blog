@@ -1,5 +1,5 @@
 baseURL = "https://suyashsrijan.com/blog/"
-languageCode = "en-gb"
+locale = "en-gb"
 title = "Suyash's blog"
 theme = "archie"
 copyright = "© Suyash Srijan"
