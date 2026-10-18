@@ -3,3 +3,9 @@
     {{ dateFormat "2006" now }} {{ with .Site.Copyright }} {{ . }} | {{ end }} All code <a href="https://github.com/theblixguy/personal-blog">open source</a> on GitHub
   </div>
 </footer>
+{{- if .Store.Get "hasMermaid" }}
+  {{- $pele := resources.Get "js/vendor/pele-1.6.0.js" | fingerprint "sha384" }}
+  <script defer src="{{ $pele.RelPermalink }}" integrity="{{ $pele.Data.Integrity }}"></script>
+  {{- $mermaid := resources.Get "js/mermaid.js" | minify | fingerprint "sha384" }}
+  <script defer src="{{ $mermaid.RelPermalink }}" integrity="{{ $mermaid.Data.Integrity }}"></script>
+{{- end }}
