@@ -7,7 +7,7 @@ copyright = "© Suyash Srijan"
 [params]
   mode = "toggle"
   useCDN = false
-  subtitle = "Thoughts on code and other curiosities"
+  subtitle = "Code and curiosities, in my own words."
 
 [markup]
   [markup.goldmark]
