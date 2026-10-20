@@ -1,0 +1,1 @@
+for(const e of document.querySelectorAll("pre.mermaid"))pele.mount(e,e.textContent)
